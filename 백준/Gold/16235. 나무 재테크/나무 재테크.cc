@@ -11,8 +11,8 @@ int trees[10][10][10000];
 int treesCnt[10][10];
 int answer = 0;
 
-int dx[8] = {-1,-1,-1,0,0 , 1,1,1};
-int dy[8] = {-1, 1, 0,1,-1,-1,1,0};
+int dx[8] = { -1,-1,-1,0,0 , 1,1,1 };
+int dy[8] = { -1, 1, 0,1,-1,-1,1,0 };
 
 void Spring()
 {
@@ -23,24 +23,34 @@ void Spring()
 			if (treesCnt[i][j] > 0)
 			{
 				sort(trees[i][j], trees[i][j] + treesCnt[i][j]);
-				int dead_trees_nutrients = 0;
-				int aliveCnt = 0;
 				for (int k = 0; k < treesCnt[i][j]; k++)
 				{
 					if (forest[i][j] >= trees[i][j][k])
 					{
 						forest[i][j] -= trees[i][j][k];
 						trees[i][j][k]++;
-						aliveCnt++;
 					}
 					else
 					{
-						dead_trees_nutrients += trees[i][j][k] / 2;
-						trees[i][j][k] = 0;
+						treesCnt[i][j] = k;
+						break;
 					}
 				}
-				treesCnt[i][j] = aliveCnt;
-				forest[i][j] += dead_trees_nutrients;
+			}
+		}
+	}
+}
+
+void Summer()
+{
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			for (int k = treesCnt[i][j]; trees[i][j][k] > 0; k++)
+			{
+				forest[i][j] += trees[i][j][k] / 2;
+				trees[i][j][k] = 0;
 			}
 		}
 	}
@@ -56,10 +66,10 @@ void Autumn()
 				for (int k = 0; k < treesCnt[i][j]; k++) {
 					if (trees[i][j][k] % 5 == 0) {
 						for (int p = 0; p < 8; p++) {
-							int ni = i + dx[p];
-							int nj = j + dy[p];
-							if (ni >= 0 && ni < n && nj >= 0 && nj < n) {
-								trees[ni][nj][treesCnt[ni][nj]++] = 1;
+							if (i + dx[p] >= 0 && i + dx[p] < n) {
+								if (j + dy[p] >= 0 && j + dy[p] < n) {
+									trees[i + dx[p]][j + dy[p]][treesCnt[i + dx[p]][j + dy[p]]++] = 1;
+								}
 							}
 						}
 					}
@@ -104,6 +114,7 @@ int main()
 	for (int i = 0; i < k; i++)
 	{
 		Spring();
+		Summer();
 		Autumn();
 		Winter();
 	}
@@ -116,8 +127,8 @@ int main()
 			answer += treesCnt[i][j];
 		}
 	}
-	
-	cout << answer<<endl;
+
+	cout << answer << endl;
 }
 
 //
