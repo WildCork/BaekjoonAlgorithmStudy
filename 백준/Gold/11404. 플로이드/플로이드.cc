@@ -28,19 +28,15 @@ int main() {
 		edges[a][b] = min(edges[a][b], c);
 	}
 
-	for (int a = 0; a < 3; a++) {
-
+	for (int j = 1; j <= n; j++) {
 		for (int i = 1; i <= n; i++) {
-			for (int j = 1; j <= n; j++) {
-				for (int k = 1; k <= n; k++) {
-					if (edges[i][k] > edges[i][j] + edges[j][k]) {
-						edges[i][k] = edges[i][j] + edges[j][k];
-					}
+			for (int k = 1; k <= n; k++) {
+				if (edges[i][k] > edges[i][j] + edges[j][k]) {
+					edges[i][k] = edges[i][j] + edges[j][k];
 				}
 			}
 		}
 	}
-
 	for (int i = 1; i <= n; i++) {
 		for (int j = 1; j <= n; j++) {
 			if (edges[i][j] == MAXNUM) {
