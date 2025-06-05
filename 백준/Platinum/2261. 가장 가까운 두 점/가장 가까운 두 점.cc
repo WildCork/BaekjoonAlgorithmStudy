@@ -1,100 +1,96 @@
 #include <iostream>
-#include <vector>
 #include <algorithm>
-#include <cmath>
+#include <vector>
+#include <string>
 
 using namespace std;
 
-int MAX = 2000000000;
-vector<pair<int, int>> M;
+const int MAX = 2000000000;
 
-bool compare(pair<int, int>a, pair<int, int>b)
-{
-	return a.first < b.first;
+int N;
+vector<pair<int, int>> arr;
+// low번째 점과 high번째 점 사이 거리를 구한다
+int Distance(int low, int high){
+	int lowX = arr[low].first, lowY = arr[low].second;
+	int highX = arr[high].first, highY = arr[high].second;
+	
+	int disX = highX - lowX, disY = highY - lowY;
+	
+	return disX * disX + disY * disY;
 }
 
-bool compare2(pair<int, int>a, pair<int, int>b)
-{
-	return a.second < b.second;
-}
-
-
-int Square(pair<int, int>a, pair<int, int>b)
-{
-	return (a.first - b.first) * (a.first - b.first)
-		+ (a.second - b.second) * (a.second - b.second);
-}
-
-int MinSearch(int left, int right)
-{
-	if (right == left)
+// 가장 가까운 두 점의 거리를 구하는 재귀함수를 이분 탐색을 통해 구현한다
+int BinarySearch(int low, int high){
+	// 기저 조건은 처음과 끝 숫자의 차이가 1인 경우다
+	if(low == high)
 		return MAX;
-	else if (right - left <= 1)
-	{
-		return Square(M[left], M[right]);
+	
+	if(low + 1 >= high)
+		return Distance(low, high);
+	
+	int disMin = Distance(low, high);
+	int tempDis = 0, mid = (low + high) / 2;
+	
+	// 왼쪽 영역의 최소 거리를 구하고
+	if((tempDis = BinarySearch(low, mid)) < disMin){
+		disMin = tempDis;
 	}
-	else
-	{
-		int answer = Square(M[left], M[right]);
-		int mid = (right + left) / 2;
-		int leftMin = MinSearch(left, mid);
-		int rightMin = MinSearch(mid + 1, right);
-		if (answer > leftMin)
-			answer = leftMin;
-		if (answer > rightMin)
-			answer = rightMin;
-		vector<pair<int, int>> N;
-		for (int i = mid; i >= left; i--)
-		{
-			if ((M[i].first - M[mid].first) * (M[i].first - M[mid].first) >= answer)
-				break;
-			N.push_back({ M[i].second, M[i].first });
-		}
-		for (int i = mid + 1; i <= right; i++)
-		{
-			if ((M[i].first - M[mid].first) * (M[i].first - M[mid].first) >= answer)
-				break;
-			N.push_back({ M[i].second, M[i].first });
-		}
-		if (N.size() == 0)
-			return answer;
-		sort(N.begin(), N.end());
-		for (size_t i = 0; i < N.size(); i++)
-		{
-			int iX = N[i].second, iY = N[i].first;
-			for (size_t j = i + 1; j < N.size(); j++)
-			{
-				int jX = N[j].second, jY = N[j].first;
-				int distY = iY  - jY;
-				int distX =iX - jX;
-				if (distY *distY >= answer)
-					break; 
-				if (distX * distX >= answer)
-					continue;
-				int dummy = Square(N[i],N[j]);
-				if (answer > dummy)
-					answer = dummy;
-			}
-		}
-		return answer;
+	// 오른쪽 영역의 최소 거리를 구하여 둘 중 최솟값을 찾는다
+	if((tempDis = BinarySearch(mid + 1, high)) < disMin){
+		disMin = tempDis;
+	}	
+	
+	vector<pair<int, int>> inner;
+	// 중간 영역에서 기준선과 x값의 차이의 제곱이 최솟값 이하인 영역의 점들을 찾는다
+	int lineX = arr[mid].first;
+	// 왼쪽 영역
+	for(int i=mid; i>=low; i--){
+		int x = arr[i].first, dist = lineX - x;
+		if(disMin <= dist * dist) break;
+		inner.push_back({arr[i].second, arr[i].first});
 	}
+	// 오른쪽 영역
+	for(int i=mid+1; i<=high; i++){
+		int x = arr[i].first, dist = lineX - x;
+		if(disMin <= dist * dist) break;
+		inner.push_back({arr[i].second, arr[i].first});
+	}
+	
+	int len = inner.size();
+	// 아무 점도 못찾았으면 최솟값을 반환한다
+	if(len == 0) return disMin;
+	// y값에 대해 정렬한다
+	sort(inner.begin(), inner.end());
+	
+	for(int i=0; i<len; i++){
+		int iX = inner[i].second, iY = inner[i].first;
+		for(int j=i+1; j<len; j++){
+			int jX = inner[j].second, jY = inner[j].first;
+			int distX = jX - iX, distY = jY - iY;
+			// 두 점의 y좌표의 차이를 제곱한 값이 최솟값 이상이면 loop를 멈춘다
+			if(disMin <= distY * distY) break;
+			// 두 점의 x좌표의 차이를 제곱한 값이 최솟값 이상이면 건너뛴다
+			if(disMin <= distX * distX) continue;
+			
+			int dist = distX*distX + distY*distY;
+			if(dist < disMin)
+				disMin = dist;
+		}
+	}
+	
+	return disMin;
 }
 
-int main()
-{
-	int n, x, y;
-	cin >> n;
-	M.resize(n);
-	for (size_t i = 0; i < n; i++)
-	{
-		cin >> M[i].first >> M[i].second;
+int main(){
+	scanf("%d",&N);
+	
+	arr = vector<pair<int, int>>(N);
+	
+	for(int i=0; i<N; i++){
+		scanf("%d %d", &arr[i].first, &arr[i].second);
 	}
-	sort(M.begin(), M.end());
-	cout << MinSearch(0, n - 1);
+	
+	sort(arr.begin(), arr.end());
+	
+	printf("%d \n", BinarySearch(0, N-1));
 }
-
-//4
-//0 0
-//0 10
-//10 0
-//10 10
